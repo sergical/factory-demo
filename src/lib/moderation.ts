@@ -1,4 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
+import * as Sentry from "@sentry/nextjs";
+
+const { logger } = Sentry;
 
 export type ModerationResult = {
   verdict: "approve" | "review" | "reject";
@@ -31,6 +34,7 @@ export async function moderateQuestion(
   body: string
 ): Promise<ModerationResult> {
   if (!process.env.ANTHROPIC_API_KEY) {
+    logger.warn("Moderation skipped: no API key configured");
     return { ...FALLBACK, reason: "No moderation key configured" };
   }
 
@@ -43,10 +47,18 @@ export async function moderateQuestion(
   });
 
   const text = response.content.find((block) => block.type === "text")?.text;
-  if (!text) return FALLBACK;
+  if (!text) {
+    logger.warn("Moderation response had no text content, falling back");
+    return FALLBACK;
+  }
 
   const match = text.match(/\{[\s\S]*\}/);
-  if (!match) return FALLBACK;
+  if (!match) {
+    logger.warn("Moderation response was not JSON, falling back", {
+      response_preview: text.slice(0, 200),
+    });
+    return FALLBACK;
+  }
 
   try {
     const parsed = JSON.parse(match[0]);
@@ -54,14 +66,25 @@ export async function moderateQuestion(
       !["approve", "review", "reject"].includes(parsed.verdict) ||
       !["product", "technical", "process", "general"].includes(parsed.category)
     ) {
+      logger.warn("Moderation response had unexpected shape, falling back", {
+        verdict: String(parsed.verdict),
+        category: String(parsed.category),
+      });
       return FALLBACK;
     }
+    logger.info("Question moderated", {
+      verdict: parsed.verdict,
+      category: parsed.category,
+    });
     return {
       verdict: parsed.verdict,
       category: parsed.category,
       reason: typeof parsed.reason === "string" ? parsed.reason : "",
     };
   } catch {
+    logger.warn("Moderation response failed to parse as JSON, falling back", {
+      response_preview: match[0].slice(0, 200),
+    });
     return FALLBACK;
   }
 }

@@ -1,6 +1,9 @@
+import * as Sentry from "@sentry/nextjs";
 import { sql } from "./db";
 import { moderateQuestion } from "./moderation";
 import type { Question, QuestionStatus } from "./types";
+
+const { logger } = Sentry;
 
 const MAX_BODY_LENGTH = 280;
 const SUBMISSIONS_PER_MINUTE = 3;
@@ -67,6 +70,10 @@ export async function submitQuestion(params: {
       and created_at > now() - interval '60 seconds'
   `;
   if (recent >= SUBMISSIONS_PER_MINUTE) {
+    logger.warn("Submission rate limit hit", {
+      submitter_id: params.submitterId,
+      recent_submissions: recent,
+    });
     throw new SubmissionError("Slow down — try again in a minute", 429);
   }
 
@@ -85,6 +92,11 @@ export async function submitQuestion(params: {
     returning id, body, author_name, status, category, moderation_reason, created_at,
               0::int as votes, false as voted
   `;
+  logger.info("Question submitted", {
+    question_id: row.id as string,
+    status,
+    category: moderation.category,
+  });
   return toQuestion(row);
 }
 
@@ -115,6 +127,10 @@ export async function setStatus(
   status: QuestionStatus
 ): Promise<void> {
   await sql`update questions set status = ${status} where id = ${id}`;
+  logger.info("Moderator changed question status", {
+    question_id: id,
+    status,
+  });
 }
 
 function toQuestion(row: Record<string, unknown>): Question {
