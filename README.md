@@ -21,7 +21,6 @@ publicly.
 - Next.js (App Router) on Vercel
 - Postgres (Neon) — `questions` and `votes` tables, see `db/schema.sql`
 - Anthropic API for question moderation (`src/lib/moderation.ts`)
-- Sentry for errors, tracing, logs, and session replay
 
 ## Development
 
