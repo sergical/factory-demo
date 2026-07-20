@@ -224,7 +224,12 @@ export default function AudiencePage() {
                     <p className="text-base/7 text-pretty sm:text-sm/6">
                       {q.body}
                     </p>
-                    <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+                    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-neutral-500 dark:text-neutral-400">
+                      {q.category && (
+                        <span className="inline-flex items-center rounded-md bg-neutral-950/2.5 px-1.5 py-0.5 text-xs font-medium text-neutral-600 ring-1 ring-neutral-950/10 ring-inset dark:bg-white/5 dark:text-neutral-400 dark:ring-white/10">
+                          {q.category}
+                        </span>
+                      )}
                       {q.author_name ?? "Anonymous"} · {timeAgo(q.created_at)}
                     </p>
                   </div>
