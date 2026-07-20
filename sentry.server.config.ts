@@ -14,11 +14,25 @@ Sentry.init({
   // material must never reach the shared Sentry org.
   sendDefaultPii: true,
   beforeSend(event) {
+    const SENSITIVE = /password|token|secret|api[-_]?key|authorization|cookie/i;
     if (event.request) {
+      // The login route's body is the moderator password
+      if (event.request.url?.includes("/api/mod/")) {
+        delete event.request.data;
+      }
       delete event.request.cookies;
-      if (event.request.headers) {
-        delete event.request.headers.cookie;
-        delete event.request.headers.authorization;
+      for (const name of Object.keys(event.request.headers ?? {})) {
+        if (SENSITIVE.test(name)) delete event.request.headers?.[name];
+      }
+    }
+    // includeLocalVariables can capture credentials held in locals
+    for (const exception of event.exception?.values ?? []) {
+      for (const frame of exception.stacktrace?.frames ?? []) {
+        for (const key of Object.keys(frame.vars ?? {})) {
+          if (SENSITIVE.test(key) && frame.vars) {
+            frame.vars[key] = "[Filtered]";
+          }
+        }
       }
     }
     return event;
