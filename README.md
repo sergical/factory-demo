@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Handraise
 
-## Getting Started
+Live audience Q&A for events and streams. Attendees submit questions and
+upvote the ones they want answered; moderators curate the queue in real time.
+Incoming questions pass through an AI moderation step before they appear
+publicly.
 
-First, run the development server:
+## How it works
+
+- **Audience page (`/`)** — submit a question (optionally with your name),
+  upvote others. The list re-ranks live by votes.
+- **Moderator dashboard (`/mod`)** — password-protected review queue.
+  Questions the AI moderator is unsure about wait here; moderators can
+  approve or reject anything at any time.
+- **Moderation** — every submission is classified by Claude
+  (approve / review / reject, plus a topic category) before it is stored.
+  If moderation is unavailable, questions fall back to the human review queue.
+
+## Stack
+
+- Next.js (App Router) on Vercel
+- Postgres (Neon) — `questions` and `votes` tables, see `db/schema.sql`
+- Anthropic API for question moderation (`src/lib/moderation.ts`)
+- Sentry for errors, tracing, logs, and session replay
+
+## Development
 
 ```bash
+npm install
+vercel env pull .env.local   # DATABASE_URL, MOD_PASSWORD, ANTHROPIC_API_KEY
+npm run db:setup             # apply db/schema.sql
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Environment variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Name                | Purpose                                             |
+| ------------------- | --------------------------------------------------- |
+| `DATABASE_URL`      | Postgres connection string (pooled)                 |
+| `ANTHROPIC_API_KEY` | Question moderation; omit to send all to review     |
+| `MOD_PASSWORD`      | Shared moderator password for `/mod`                |
