@@ -63,15 +63,33 @@ export async function moderateQuestion(
     return FALLBACK;
   }
 
-  const parsed = JSON.parse(match[0]);
-  const result: ModerationResult = {
-    verdict: parsed.classification.verdict,
-    category: parsed.classification.category,
-    reason: parsed.classification.reason ?? "",
-  };
-  logger.info("Question moderated", {
-    verdict: result.verdict,
-    category: result.category,
-  });
-  return result;
+  try {
+    const parsed = JSON.parse(match[0]);
+    if (
+      !["approve", "review", "reject", "spam"].includes(parsed.verdict) ||
+      !["agents", "observability", "product", "pricing", "general"].includes(
+        parsed.category
+      )
+    ) {
+      logger.warn("Moderation response had unexpected shape, falling back", {
+        verdict: String(parsed.verdict),
+        category: String(parsed.category),
+      });
+      return FALLBACK;
+    }
+    logger.info("Question moderated", {
+      verdict: parsed.verdict,
+      category: parsed.category,
+    });
+    return {
+      verdict: parsed.verdict,
+      category: parsed.category,
+      reason: typeof parsed.reason === "string" ? parsed.reason : "",
+    };
+  } catch {
+    logger.warn("Moderation response failed to parse as JSON, falling back", {
+      response_preview: match[0].slice(0, 200),
+    });
+    return FALLBACK;
+  }
 }

@@ -138,7 +138,8 @@ export async function setStatus(
   await sql`update questions set status = ${status} where id = ${id}`;
   if (status === "spam") {
     const [row] = await sql`select category from questions where id = ${id}`;
-    const topic = SPAM_TOPIC_TRACKING[row.category as string].label;
+    const topic =
+      SPAM_TOPIC_TRACKING[row.category as string]?.label ?? "General";
     logger.info("Spam marked by topic", { question_id: id, topic });
   }
   logger.info("Moderator changed question status", {
