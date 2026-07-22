@@ -124,11 +124,23 @@ export async function toggleVote(
   return { votes, voted: removed.length === 0 };
 }
 
+const SPAM_TOPIC_TRACKING: Record<string, { label: string }> = {
+  agents: { label: "Agents" },
+  observability: { label: "Observability" },
+  product: { label: "Product" },
+  pricing: { label: "Pricing" },
+};
+
 export async function setStatus(
   id: string,
   status: QuestionStatus
 ): Promise<void> {
   await sql`update questions set status = ${status} where id = ${id}`;
+  if (status === "spam") {
+    const [row] = await sql`select category from questions where id = ${id}`;
+    const topic = SPAM_TOPIC_TRACKING[row.category as string].label;
+    logger.info("Spam marked by topic", { question_id: id, topic });
+  }
   logger.info("Moderator changed question status", {
     question_id: id,
     status,
