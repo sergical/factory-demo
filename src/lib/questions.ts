@@ -83,7 +83,9 @@ export async function submitQuestion(params: {
       ? "approved"
       : moderation.verdict === "reject"
         ? "rejected"
-        : "pending";
+        : moderation.verdict === "spam"
+          ? "spam"
+          : "pending";
 
   const [row] = await sql`
     insert into questions (body, author_name, status, category, moderation_reason, submitter_id)

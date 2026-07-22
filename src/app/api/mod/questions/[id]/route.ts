@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { isModerator } from "@/lib/mod-auth";
 import { setStatus } from "@/lib/questions";
 
-const STATUSES = ["pending", "approved", "rejected"] as const;
+const STATUSES = ["pending", "approved", "rejected", "spam"] as const;
 
 export async function PATCH(
   request: Request,

@@ -1,4 +1,4 @@
-export type QuestionStatus = "pending" | "approved" | "rejected";
+export type QuestionStatus = "pending" | "approved" | "rejected" | "spam";
 
 export type Question = {
   id: string;

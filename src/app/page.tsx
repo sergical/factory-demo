@@ -60,7 +60,10 @@ export default function AudiencePage() {
     if (data.question.status === "approved") {
       setSubmit({ kind: "idle" });
       refresh();
-    } else if (data.question.status === "rejected") {
+    } else if (
+      data.question.status === "rejected" ||
+      data.question.status === "spam"
+    ) {
       setSubmit({ kind: "error", message: "That one didn't pass moderation." });
     } else {
       setSubmit({ kind: "pending-review" });

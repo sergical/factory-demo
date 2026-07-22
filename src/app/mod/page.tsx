@@ -11,6 +11,7 @@ const TABS: { status: QuestionStatus; label: string }[] = [
   { status: "pending", label: "Review" },
   { status: "approved", label: "Approved" },
   { status: "rejected", label: "Rejected" },
+  { status: "spam", label: "Spam" },
 ];
 
 export default function ModeratorPage() {
@@ -127,6 +128,15 @@ export default function ModeratorPage() {
                         className="rounded-md px-2.5 py-2 text-base font-medium text-neutral-600 ring-1 ring-neutral-950/10 ring-inset hover:bg-neutral-950/2.5 sm:py-1 sm:text-sm dark:text-neutral-400 dark:ring-white/10 dark:hover:bg-white/5"
                       >
                         Reject
+                      </button>
+                    )}
+                    {q.status !== "spam" && (
+                      <button
+                        type="button"
+                        onClick={() => setStatus(q.id, "spam")}
+                        className="rounded-md px-2.5 py-2 text-base font-medium text-neutral-600 ring-1 ring-neutral-950/10 ring-inset hover:bg-neutral-950/2.5 sm:py-1 sm:text-sm dark:text-neutral-400 dark:ring-white/10 dark:hover:bg-white/5"
+                      >
+                        Spam
                       </button>
                     )}
                   </div>
